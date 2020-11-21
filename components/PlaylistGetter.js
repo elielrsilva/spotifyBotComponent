@@ -5,7 +5,6 @@ module.exports = {
     name: 'PlaylistGetter',
     properties: {
       genre: {required: true, type: 'string'},
-      playlists: {required: true, type: 'string'}
     },
     supportedActions: ['success', 'failure']
   }),
@@ -34,21 +33,39 @@ module.exports = {
       offset : 0
     })
     .then(function(data) {
-      data.body.playlists.items.map( element => {
-        return { description: element.description, href: element.href, name: element.name, images: element.images}
+      let playslistData;
+      let cards;
+
+      playslistData = data.body.playlists.items.map( element => {
+        return { 
+          description: element.description,
+          href: element.href, 
+          name: element.name, 
+          images: element.images,
+          external_urls: element.external_urls
+        }
       });
 
+      cards = playslistData.map( element => {
+        return renderCards(element, conversation)
+      });
+
+
+      var cardsResponse = conversation.MessageModel().cardConversationMessage(
+        'vertical', cards);
+      conversation.logger().info('Replying with card response');
+      conversation.reply(cardsResponse);
+      
       conversation.transition('success');
       conversation.keepTurn(true);
       done();
+
     }, function(err) {
 
       conversation.transition('failure');
       conversation.logger().info(err);
       done();
     });
-
-    
   }
 };
 
@@ -60,12 +77,9 @@ function renderCards(playlist, conversation){
       'Listen now', null, playlist.external_urls.spotify) 
     );
   
-  var messageModel = conversation.MessageModel();
-  var cards = [];
-  cards.push(conversation.MessageModel().cardObject(
+  return conversation.MessageModel().cardObject(
     playlist.name,
     playlist.description,
-    playlist.images[0].url, null, actions));
-  
-  return cards;
+    playlist.images[0].url, null, actions);
+
 }
