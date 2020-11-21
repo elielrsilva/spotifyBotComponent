@@ -1,5 +1,5 @@
 {
-  "name": "my-custom-component",
+  "name": "playlist-getter",
   "version": "1.0.0",
   "description": "Oracle Bots Custom Component Package",
   "main": "main.js",
@@ -10,10 +10,16 @@
     "start": "npm run bots-node-sdk -- service ."
   },
   "repository": {},
-  "dependencies": {},
+  "dependencies": {
+    "request": "^2.88.2",
+    "spotify-web-api-node": "^5.0.0"
+  },
   "devDependencies": {
     "@oracle/bots-node-sdk": "^2.4.1",
     "express": "^4.16.3"
   },
-  "bundledDependencies": []
+  "bundledDependencies": [
+    "request",
+    "spotify-web-api-node"
+  ]
 }
