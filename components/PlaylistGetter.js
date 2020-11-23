@@ -51,7 +51,7 @@ module.exports = {
 
 
                 var cardsResponse = conversation.MessageModel().cardConversationMessage(
-                    'vertical', cards);
+                    'horizontal', cards);
                 conversation.logger().info('Replying with card response');
                 conversation.reply(cardsResponse);
 
