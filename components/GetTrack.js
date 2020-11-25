@@ -30,27 +30,29 @@ module.exports = {
         );
         
         // Search tracks whose name, album or artist contains 'Love'
-        spotifyApi.searchTracks(track)
+        await spotifyApi.searchTracks(track, {
+            limit: 20,
+            offset:0
+        })
         .then(function(data) {
             let tracksData;
             let cards;
 
-            tracksData = data.body.map(element => {
+            tracksData = data.body.tracks.items.map(element => {
                 return{
                     name: element.name,
                     external_urls: element.external_urls.spotify,
-                    image: element.images,
+                    images: element.album.images,
                     preview_url: element.preview_url
                 }
             })
 
-            cards = playslistData.map(element => {
+            cards = tracksData.map(element => {
                 return renderCards(element, conversation)
             });
 
-
             var cardsResponse = conversation.MessageModel().cardConversationMessage(
-                'horizontal', cards);
+                'vertical', cards);
 
             conversation.logger().info('Replying with card response');
             conversation.reply(cardsResponse);
@@ -73,12 +75,11 @@ function renderCards(playlist, conversation) {
     var actions = [];
     actions.push(
         conversation.MessageModel().urlActionObject(
-            'Listen now', null, playlist.external_urls.spotify)
+            'Listen now', null, playlist.external_urls)
     );
 
     return conversation.MessageModel().cardObject(
-        playlist.name,
-        playlist.description,
+        playlist.name, null,
         playlist.images[0].url, null, actions);
 
 }
