@@ -4,7 +4,8 @@ module.exports = {
     metadata: () => ({
         name: 'MusicSearcher',
         properties: {
-            track: { required: true, type: 'string' }
+            track: { required: true, type: 'string' },
+            offset: { required: true, type: 'int' }
         },
         supportedActions: ['success', 'failure']
     }),
@@ -12,6 +13,7 @@ module.exports = {
 
         // log in into spotify
         const { track } = conversation.properties();
+        const { offset } = conversation.properties();
 
         var spotifyApi = new SpotifyWebApi({
             clientId: 'af48f26d07dd4483bb874984c69526c9',
@@ -31,8 +33,8 @@ module.exports = {
         
         // Search tracks whose name, album or artist contains 'Love'
         await spotifyApi.searchTracks(track, {
-            limit: 20,
-            offset:0
+            limit: 4,
+            offset: offset
         })
         .then(function(data) {
             let tracksData;
