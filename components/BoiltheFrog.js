@@ -3,11 +3,11 @@ module.exports = {
         name: "BoiltheFrog",
         properties: {
             artist1: { required: true, type: 'string' },
-            artist2: { required: true, type: 'string' }
+            artist2: { required: true, type: 'string' },
         },
         supportedActions: ['success', 'failure']
     }),
-    invoke: async(conversation, done) => {
+    invoke: (conversation, done) => {
         //Execuções em segundo plano necessitam de async
         const { artist1, artist2 } = conversation.properties();
 
@@ -16,9 +16,9 @@ module.exports = {
 
         getBoiltheFrog(artist1, artist2, conversation).then(function(body) {
 
-            if (playlist) {
-                var playlist = body.path;
-                conversation.variable('playlist: ', playlist)
+            if (body.path) {
+                var playlists = body.path;
+                conversation.variable("playlists", playlists)
                 conversation.keepTurn(true);
                 conversation.transition('success');
                 done();
