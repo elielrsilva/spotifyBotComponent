@@ -2,16 +2,18 @@ const SpotifyWebApi = require('spotify-web-api-node');
 
 module.exports = {
     metadata: () => ({
-        name: 'PlaylistGetter',
+        name: "GetPlaylistsByFeeling",
         properties: {
-            genre: { required: true, type: 'string' },
+            feeling: { required: true, type: 'string' },
             offset: { required: true, type: 'int' }
         },
         supportedActions: ['success', 'failure']
     }),
     invoke: async(conversation, done) => {
-        const { genre } = conversation.properties();
+        const { feeling } = conversation.properties();
         const { offset } = conversation.properties();
+
+        conversation.logger().info(offset);
 
         var spotifyApi = new SpotifyWebApi({
             clientId: 'af48f26d07dd4483bb874984c69526c9',
@@ -29,16 +31,16 @@ module.exports = {
             }
         );
 
-        await spotifyApi.getPlaylistsForCategory(genre, {
-                country: 'BR',
-                limit: 4,
-                offset: offset
+        // Search playlists whose name or description contains 'workout'
+        spotifyApi.searchPlaylists(feeling, { 
+                limit : 4,
+                offset : offset
             })
             .then(function(data) {
-                let playslistData;
+                let playlistsData;
                 let cards;
-
-                playslistData = data.body.playlists.items.map(element => {
+                
+                playlistsData = data.body.playlists.items.map( element => {
                     return {
                         description: element.description,
                         href: element.href,
@@ -48,10 +50,9 @@ module.exports = {
                     }
                 });
 
-                cards = playslistData.map(element => {
+                cards = playlistsData.map(element => {
                     return renderCards(element, conversation)
                 });
-
 
                 var cardsResponse = conversation.MessageModel().cardConversationMessage(
                     'horizontal', cards);
@@ -63,15 +64,13 @@ module.exports = {
                 done();
 
             }, function(err) {
-
                 conversation.transition('failure');
                 conversation.logger().info(err);
                 done();
-            });
+        });
     }
 };
 
-//Function to render 1 card
 function renderCards(playlist, conversation) {
     var actions = [];
     actions.push(
@@ -84,4 +83,4 @@ function renderCards(playlist, conversation) {
         playlist.description,
         playlist.images[0].url, null, actions);
 
-}
+};
