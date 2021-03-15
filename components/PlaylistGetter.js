@@ -5,17 +5,18 @@ module.exports = {
         name: 'PlaylistGetter',
         properties: {
             genre: { required: true, type: 'string' },
-            offset: { required: true, type: 'int' }
+            offset: { required: true, type: 'int' },
+            clientId: { required: true, type: 'string' },
+            clientSecret: { required: true, type: 'string' }
         },
         supportedActions: ['success', 'failure']
     }),
     invoke: async(conversation, done) => {
-        const { genre } = conversation.properties();
-        const { offset } = conversation.properties();
+        const { genre, offset, clientId, clientSecret } = conversation.properties();
 
         var spotifyApi = new SpotifyWebApi({
-            clientId: 'af48f26d07dd4483bb874984c69526c9',
-            clientSecret: '6ab7cd0aeb7a4ead95354f59e798b162'
+            clientId,
+            clientSecret
         });
 
         await spotifyApi.clientCredentialsGrant().then(
