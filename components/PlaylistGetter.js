@@ -29,7 +29,7 @@ module.exports = {
       genre,
       offset,
       clientId,
-      clientSecret
+      clientSecret,
     } = conversation.properties();
     var spotifyApi = new SpotifyWebApi({
       clientId,
@@ -50,7 +50,8 @@ module.exports = {
           href: element.href,
           name: element.name,
           images: element.images,
-          external_urls: element.external_urls
+          external_urls: element.external_urls,
+          musicId: element.id
         }
       });
       const cards = playlistData.map(element => {
@@ -60,12 +61,12 @@ module.exports = {
       const cardsResponse = conversation.MessageModel().cardConversationMessage('horizontal', cards);
       conversation.logger().info('Replying with card response');
       conversation.reply(cardsResponse);
-      conversation.transition('success');
-      conversation.keepTurn(true);
+      conversation.transition();
+      // conversation.keepTurn(true);
       done();
     } catch (error) {
       conversation.transition('failure');
-      conversation.logger().info('Something went wrong when retrieving an access token', err);
+      conversation.logger().info('Something went wrong when retrieving an access token', error);
       done();
     }
   }

@@ -22,7 +22,7 @@ module.exports = {
         type: 'string'
       }
     },
-    supportedActions: ['success', 'failure']
+    supportedActions: ['success', 'failure', 'listenNow', 'increment']
   }),
   invoke: async (conversation, done) => {
     //load conversation properties
@@ -30,7 +30,7 @@ module.exports = {
       track,
       offset,
       clientId,
-      clientSecret
+      clientSecret,
     } = conversation.properties();
 
     //setUp Spotify Client
@@ -52,17 +52,20 @@ module.exports = {
           name: element.name,
           external_urls: element.external_urls.spotify,
           images: element.album.images,
-          preview_url: element.preview_url
+          preview_url: element.preview_url,
+          musicId: element.id
         }
       })
       const cards = tracksData.map(element => {
         return cardUtil.renderCards(element, conversation)
       });
-      const cardsResponse = conversation.MessageModel().cardConversationMessage('horizontal', cards);
+      var cardsResponse = conversation.MessageModel().cardConversationMessage('horizontal', cards);
+      cardResponse =  cardUtil.searchMoreAction(cardsResponse, conversation);
       conversation.logger().info('Replying with card response');
       conversation.reply(cardsResponse);
-      conversation.transition('success');
-      conversation.keepTurn(true);
+      conversation.transition('increment');
+      // conversation.transition('success');
+      // conversation.keepTurn(true);
       done();
     } catch (error) {
       conversation.transition('failure');

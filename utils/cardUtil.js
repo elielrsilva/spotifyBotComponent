@@ -3,12 +3,37 @@ module.exports = {
   renderCards: (playlist, conversation) => {
     var actions = [];
     actions.push(
+      conversation.MessageModel().postbackActionObject(
+        'Som na caixa Maestro!',
+        null,
+        { action: 'listenNow', variables: { musicId: playlist.musicId, externalLink: playlist.musicId } }
+      )
+    );
+    actions.push(
       conversation.MessageModel().urlActionObject(
-        'Listen now', null, playlist.external_urls)
+        'Escutar no Spotify!',
+        null,
+        playlist.external_urls 
+      )
     );
   
     return conversation.MessageModel().cardObject(
-      playlist.name, null,
-      playlist.images[0].url, null, actions)
+      playlist.name, 
+      null,
+      playlist.images[0].url, 
+      null, 
+      actions
+      )
+  },
+  searchMoreAction: (cardsMessage, conversation) => {
+    var actions= [];
+    actions.push(
+      conversation.MessageModel().postbackActionObject(
+        'Ver mais',
+        null,
+        { action: 'increment' }
+      )
+    )
+    return conversation.MessageModel().addGlobalActions(cardsMessage, actions);
   }
 }

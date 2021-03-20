@@ -29,7 +29,7 @@ module.exports = {
       feeling,
       offset,
       clientId,
-      clientSecret
+      clientSecret,
     } = conversation.properties();
 
     var spotifyApi = new SpotifyWebApi({
@@ -40,7 +40,7 @@ module.exports = {
     try {
       const clientCredentialsResponse = await spotifyApi.clientCredentialsGrant();
       spotifyApi.setAccessToken(clientCredentialsResponse.body['access_token']);
-      const searchPlaylistResponse = spotifyApi.searchPlaylists(feeling, {
+      const searchPlaylistResponse = await spotifyApi.searchPlaylists(feeling, {
         limit: 4,
         offset: offset
       })
@@ -50,7 +50,8 @@ module.exports = {
           href: element.href,
           name: element.name,
           images: element.images,
-          external_urls: element.external_urls
+          external_urls: element.external_urls,
+          musicId: element.id
         }
       });
   
@@ -58,15 +59,15 @@ module.exports = {
         return cardUtil.renderCards(element, conversation)
       });
   
-      var cardsResponse = conversation.MessageModel().cardConversationMessage('horizontal', cards);
+      var cardsResponse = conversation.MessageModel().cardConversationMessage('horizontal', cards );
       conversation.logger().info('Replying with card response');
       conversation.reply(cardsResponse);
-      conversation.transition('success');
-      conversation.keepTurn(true);
+      conversation.transition();
+      // conversation.keepTurn(true);
       done();
     } catch (error) {
       conversation.transition('failure');
-      conversation.logger().info(err);
+      conversation.logger().info(error);
       done();
     }
   }
