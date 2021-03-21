@@ -1,5 +1,6 @@
 const SpotifyWebApi = require('spotify-web-api-node');
 const cardUtil = require('../utils/cardUtil');
+const { getTrack } = require('../utils/spotifyUtil');
 
 module.exports = {
   metadata: () => ({
@@ -37,39 +38,19 @@ module.exports = {
       clientId,
       clientSecret
     });
+    const clientCredentialsResponse = await spotifyApi.clientCredentialsGrant()
+    spotifyApi.setAccessToken(clientCredentialsResponse.body['access_token']);
 
-    if (conversation.postback()) {
-      conversation.keepTurn(true);
+    if (conversation.postback() && conversation.postback().action) {
+      await getTrack(track, offset, spotifyApi, conversation);
+      conversation.keepTurn(false);
       conversation.transition(conversation.postback().action);
       done();
     } else {
-      
       try {
-  
-        const clientCredentialsResponse = await spotifyApi.clientCredentialsGrant()
-        spotifyApi.setAccessToken(clientCredentialsResponse.body['access_token']);
-        const searchTrackResponse = await spotifyApi.searchTracks(track, {
-          country: 'BR',
-          limit: 4,
-          offset
-        })
-        var tracksData = searchTrackResponse.body.tracks.items.map(element => {
-          return {
-            name: element.name,
-            external_urls: element.external_urls.spotify,
-            images: element.album.images,
-            preview_url: element.preview_url,
-            type: element.type,
-            musicId: element.id
-          }
-        })
-        const cards = tracksData.map(element => {
-          return cardUtil.renderCards(element, conversation)
-        });
-        var cardsResponse = conversation.MessageModel().cardConversationMessage('horizontal', cards);
-        cardResponse =  cardUtil.searchMoreAction(cardsResponse, conversation);
-        conversation.logger().info('Replying with card response');
-        conversation.reply(cardsResponse);  
+        await getTrack(track, offset, spotifyApi, conversation);
+        conversation.variable('offset', 4);
+        conversation.transition('success');
         done();
       } catch (error) {
         conversation.transition('failure');
@@ -77,6 +58,5 @@ module.exports = {
         done();
       }
     }
-
   }
 };
