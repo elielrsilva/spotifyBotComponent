@@ -38,17 +38,10 @@ module.exports = {
     const clientCredentialsResponse = await spotifyApi.clientCredentialsGrant();
     spotifyApi.setAccessToken(clientCredentialsResponse.body['access_token']);
 
-    // if (conversation.postback()) {
-    //   //consulta para o spotify
-    //   await spotifyUtil.getPlaylistByCategory(genre, offset, spotifyApi, conversation);
-    //   conversation.keepTurn(false);
-    //   conversation.transition(conversation.postback().action);
-    //   done();
-    // } else {
+
       try {
         await spotifyUtil.getPlaylistByCategory(genre, offset, spotifyApi, conversation);
-        conversation.variable('origem', 'setOriginfromGenre')
-        // conversation.variable('offset', 4);
+        conversation.variable('origem', 'setOriginfromGenre');
         conversation.transition('success');
         done();
       } catch (error) {
@@ -56,6 +49,5 @@ module.exports = {
         conversation.logger().info('Something went wrong when retrieving an access token', error);
         done();
       }
-    // }
   }
 };

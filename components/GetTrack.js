@@ -1,6 +1,5 @@
 const SpotifyWebApi = require('spotify-web-api-node');
-const cardUtil = require('../utils/cardUtil');
-const { getTrack } = require('../utils/spotifyUtil');
+const spotifyUtil = require('../utils/spotifyUtil');
 
 module.exports = {
   metadata: () => ({
@@ -41,15 +40,16 @@ module.exports = {
     const clientCredentialsResponse = await spotifyApi.clientCredentialsGrant()
     spotifyApi.setAccessToken(clientCredentialsResponse.body['access_token']);
 
-    if (conversation.postback() && conversation.postback().action) {
-      await getTrack(track, offset, spotifyApi, conversation);
-      conversation.keepTurn(false);
-      conversation.transition(conversation.postback().action);
-      done();
-    } else {
+    // if (conversation.postback() && conversation.postback().action) {
+    //   await getTrack(track, offset, spotifyApi, conversation);
+    //   conversation.keepTurn(false);
+    //   conversation.transition(conversation.postback().action);
+    //   done();
+    // } else {
       try {
-        await getTrack(track, offset, spotifyApi, conversation);
-        conversation.variable('offset', 4);
+        await spotifyUtil.getTrack(track, offset, spotifyApi, conversation);
+        // conversation.variable('offset', 4);
+        conversation.variable('origem', 'setOriginfromMusic');
         conversation.transition('success');
         done();
       } catch (error) {
@@ -57,6 +57,6 @@ module.exports = {
         conversation.logger().info('Something went wrong when retrieving a track', error);
         done();
       }
-    }
+    // }
   }
 };

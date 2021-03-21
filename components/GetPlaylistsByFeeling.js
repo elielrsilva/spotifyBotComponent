@@ -1,5 +1,5 @@
 const SpotifyWebApi = require('spotify-web-api-node');
-const cardUtil = require('../utils/cardUtil');
+const spotifyUtil = require('../utils/spotifyUtil');
 
 module.exports = {
   metadata: () => ({
@@ -38,20 +38,15 @@ module.exports = {
     const clientCredentialsResponse = await spotifyApi.clientCredentialsGrant();
     spotifyApi.setAccessToken(clientCredentialsResponse.body['access_token']);
 
-    if (conversation.postback()) {
-      conversation.keepTurn(true);
-      conversation.transition(conversation.postback().action);
-      done();
-    } else {
       try {
-        await getPlaylistByFeeling(feeling, offset, spotifyApi, conversation);
-        conversation.variable('offset', 4);
+        await spotifyUtil.getPlaylistByFeeling(feeling, offset, spotifyApi, conversation);
+        conversation.variable('origem', 'searchMusicbyFeeling');
+        conversation.transition('success');
         done();
       } catch (error) {
         conversation.transition('failure');
         conversation.logger().info(error);
         done();
       }
-    }
   }
 };
