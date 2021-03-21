@@ -6,7 +6,7 @@ module.exports = {
       conversation.MessageModel().postbackActionObject(
         'Som na caixa Maestro!',
         null,
-        { action: 'listenNow', variables: { musicId: playlist.musicId, externalLink: playlist.musicId } }
+        { action: 'listenNow', variables: { musicId: playlist.musicId, type: playlist.type == 'track' ? 'track' : 'playlist'}}
       )
     );
     actions.push(

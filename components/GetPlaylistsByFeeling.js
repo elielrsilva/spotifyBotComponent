@@ -22,7 +22,7 @@ module.exports = {
         type: 'string'
       }
     },
-    supportedActions: ['success', 'failure']
+    supportedActions: ['success', 'failure', 'listenNow', 'increment']
   }),
   invoke: async (conversation, done) => {
     const {
@@ -31,44 +31,47 @@ module.exports = {
       clientId,
       clientSecret,
     } = conversation.properties();
-
     var spotifyApi = new SpotifyWebApi({
       clientId,
       clientSecret
     });
 
-    try {
-      const clientCredentialsResponse = await spotifyApi.clientCredentialsGrant();
-      spotifyApi.setAccessToken(clientCredentialsResponse.body['access_token']);
-      const searchPlaylistResponse = await spotifyApi.searchPlaylists(feeling, {
-        limit: 4,
-        offset: offset
-      })
-      const playlistsData = searchPlaylistResponse.body.playlists.items.map(element => {
-        return {
-          description: element.description,
-          href: element.href,
-          name: element.name,
-          images: element.images,
-          external_urls: element.external_urls,
-          musicId: element.id
-        }
-      });
-  
-      const cards = playlistsData.map(element => {
-        return cardUtil.renderCards(element, conversation)
-      });
-  
-      var cardsResponse = conversation.MessageModel().cardConversationMessage('horizontal', cards );
-      conversation.logger().info('Replying with card response');
-      conversation.reply(cardsResponse);
-      conversation.transition();
-      // conversation.keepTurn(true);
+    if (conversation.postback()) {
+      conversation.keepTurn(true);
+      conversation.transition(conversation.postback().action);
       done();
-    } catch (error) {
-      conversation.transition('failure');
-      conversation.logger().info(error);
-      done();
+    } else {
+      try {
+        const clientCredentialsResponse = await spotifyApi.clientCredentialsGrant();
+        spotifyApi.setAccessToken(clientCredentialsResponse.body['access_token']);
+        const searchPlaylistResponse = await spotifyApi.searchPlaylists(feeling, {
+          country: 'BR',
+          limit: 4,
+          offset
+        })
+        const playlistData = searchPlaylistResponse.body.playlists.items.map(element => {
+          return {
+            name: element.name,
+            external_urls: element.external_urls.spotify,
+            images: element.images,
+            type: element.type,
+            musicId: element.id
+          }
+        });
+        const cards = playlistData.map(element => {
+          return cardUtil.renderCards(element, conversation)
+        });
+    
+        var cardsResponse = conversation.MessageModel().cardConversationMessage('horizontal', cards );
+        cardResponse =  cardUtil.searchMoreAction(cardsResponse, conversation);
+        conversation.logger().info('Replying with card response');
+        conversation.reply(cardsResponse);
+        done();
+      } catch (error) {
+        conversation.transition('failure');
+        conversation.logger().info(error);
+        done();
+      }
     }
   }
 };

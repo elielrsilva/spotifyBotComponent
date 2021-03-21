@@ -33,44 +33,50 @@ module.exports = {
       clientSecret,
     } = conversation.properties();
 
-    //setUp Spotify Client
     const spotifyApi = new SpotifyWebApi({
       clientId,
       clientSecret
     });
 
-    try {
-      //Perform Spotify Request
-      const clientCredentialsResponse = await spotifyApi.clientCredentialsGrant()
-      spotifyApi.setAccessToken(clientCredentialsResponse.body['access_token']);
-      const searchTrackResponse = await spotifyApi.searchTracks(track, {
-        limit: 4,
-        offset
-      })
-      var tracksData = searchTrackResponse.body.tracks.items.map(element => {
-        return {
-          name: element.name,
-          external_urls: element.external_urls.spotify,
-          images: element.album.images,
-          preview_url: element.preview_url,
-          musicId: element.id
-        }
-      })
-      const cards = tracksData.map(element => {
-        return cardUtil.renderCards(element, conversation)
-      });
-      var cardsResponse = conversation.MessageModel().cardConversationMessage('horizontal', cards);
-      cardResponse =  cardUtil.searchMoreAction(cardsResponse, conversation);
-      conversation.logger().info('Replying with card response');
-      conversation.reply(cardsResponse);
-      conversation.transition('increment');
-      // conversation.transition('success');
-      // conversation.keepTurn(true);
+    if (conversation.postback()) {
+      conversation.keepTurn(true);
+      conversation.transition(conversation.postback().action);
       done();
-    } catch (error) {
-      conversation.transition('failure');
-      conversation.logger().info('Something went wrong when retrieving a track', error);
-      done();
+    } else {
+      
+      try {
+  
+        const clientCredentialsResponse = await spotifyApi.clientCredentialsGrant()
+        spotifyApi.setAccessToken(clientCredentialsResponse.body['access_token']);
+        const searchTrackResponse = await spotifyApi.searchTracks(track, {
+          country: 'BR',
+          limit: 4,
+          offset
+        })
+        var tracksData = searchTrackResponse.body.tracks.items.map(element => {
+          return {
+            name: element.name,
+            external_urls: element.external_urls.spotify,
+            images: element.album.images,
+            preview_url: element.preview_url,
+            type: element.type,
+            musicId: element.id
+          }
+        })
+        const cards = tracksData.map(element => {
+          return cardUtil.renderCards(element, conversation)
+        });
+        var cardsResponse = conversation.MessageModel().cardConversationMessage('horizontal', cards);
+        cardResponse =  cardUtil.searchMoreAction(cardsResponse, conversation);
+        conversation.logger().info('Replying with card response');
+        conversation.reply(cardsResponse);  
+        done();
+      } catch (error) {
+        conversation.transition('failure');
+        conversation.logger().info('Something went wrong when retrieving a track', error);
+        done();
+      }
     }
+
   }
 };

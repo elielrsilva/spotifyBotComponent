@@ -4,11 +4,12 @@ module.exports = {
         supportedActions: ['success', 'failure']
     }),
     invoke: (conversation, done) => {
+        var type = conversation.postback().variables.type;
+
         if (conversation.postback() && !!conversation.postback().variables.musicId){
-            // conversation.reply(`<iframe src="https://open.spotify.com/embed/track/${conversation.postback().variables.musicId}" width="225" height="385" frameborder="0" allowtransparency="false" allow="encrypted-media"></iframe>`);
             var urlAction = conversation.MessageModel().urlActionObject( 'Escutar no Spotify!', null, conversation.postback().variables.externalLink);
             var textConversation = conversation.MessageModel().textConversationMessage(
-                `<iframe src="https://open.spotify.com/embed/track/${conversation.postback().variables.musicId}" width="225" height="80" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>`,
+                `<iframe src="https://open.spotify.com/embed/${type}/${conversation.postback().variables.musicId}" width="225" height="${ type == 'track'? '80' :'380' }" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>`,
                 null,
                 'Clique no símbolo do Spotify para ver mais detalhes! 💚'
             )

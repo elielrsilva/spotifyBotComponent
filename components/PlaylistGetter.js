@@ -1,5 +1,5 @@
 const SpotifyWebApi = require('spotify-web-api-node');
-const cardUtil = require('../utils/cardUtil');
+const spotifyUtil = require('../utils/spotifyUtil');
 
 module.exports = {
   metadata: () => ({
@@ -22,7 +22,7 @@ module.exports = {
         type: 'string'
       }
     },
-    supportedActions: ['success', 'failure']
+    supportedActions: ['success', 'failure', 'listenNow', 'increment']
   }),
   invoke: async (conversation, done) => {
     const {
@@ -35,39 +35,25 @@ module.exports = {
       clientId,
       clientSecret
     });
+    const clientCredentialsResponse = await spotifyApi.clientCredentialsGrant();
+    spotifyApi.setAccessToken(clientCredentialsResponse.body['access_token']);
 
-    try {
-      const clientCredentialsResponse = await spotifyApi.clientCredentialsGrant();
-      spotifyApi.setAccessToken(clientCredentialsResponse.body['access_token']);
-      const searchPlaylistResponse = await spotifyApi.getPlaylistsForCategory(genre, {
-        country: 'BR',
-        limit: 4,
-        offset
-      })
-      const playlistData = searchPlaylistResponse.body.playlists.items.map(element => {
-        return {
-          description: element.description,
-          href: element.href,
-          name: element.name,
-          images: element.images,
-          external_urls: element.external_urls,
-          musicId: element.id
-        }
-      });
-      const cards = playlistData.map(element => {
-        return cardUtil.renderCards(element, conversation)
-      });
-  
-      const cardsResponse = conversation.MessageModel().cardConversationMessage('horizontal', cards);
-      conversation.logger().info('Replying with card response');
-      conversation.reply(cardsResponse);
-      conversation.transition();
-      // conversation.keepTurn(true);
+    if (conversation.postback()) {
+      //consulta para o spotify
+      await spotifyUtil.getPlaylistByCategory(genre, offset, spotifyApi, conversation);
+      conversation.keepTurn(false);
+      conversation.transition(conversation.postback().action);
       done();
-    } catch (error) {
-      conversation.transition('failure');
-      conversation.logger().info('Something went wrong when retrieving an access token', error);
-      done();
+    } else {
+      try {
+        await spotifyUtil.getPlaylistByCategory(genre, offset, spotifyApi, conversation);
+        conversation.variable('offset', 4);
+        done();
+      } catch (error) {
+        conversation.transition('failure');
+        conversation.logger().info('Something went wrong when retrieving an access token', error);
+        done();
+      }
     }
   }
 };
